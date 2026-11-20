@@ -1,0 +1,90 @@
+{
+  "schema_version": "tokenization_schema_v2",
+  "pipeline_version": "tokv2.0",
+  "seed": 20260803,
+  "base_dataset": {
+    "description": "v2 lee EXCLUSIVAMENTE los outputs ya consolidados y congelados de tokv1.0 (moves_uint16.bin, game_offsets.npy, game_lengths.npy, results.npy, metadata.parquet) en modo solo lectura. Nunca reabre ni reparsea el PGN crudo, nunca reescribe outputs/<test_name> de v1.",
+    "v1_outputs_dir": "../outputs",
+    "v1_test_name_default": "test_10000"
+  },
+  "output_dir": "../outputs_v2",
+  "shard_dir": "../shards_v2",
+  "checkpoint_dir": "../checkpoints_v2",
+  "reports_dir": "../reports",
+  "logs_dir": "../logs",
+  "golden_dir": "../golden",
+  "shard_size_positions": 100000,
+  "history_lengths": [4, 8, 16, 32],
+  "materialize_dense_tensors": {
+    "enabled_for_full_pilot": false,
+    "demo_sample_size": 2000,
+    "reason": "board_to_tensor(23,8,8,float32) mide ~5888 bytes/posicion; sobre test_10000 (~818k posiciones) son ~4.8GB solo de tensores, y no escala al corpus de 1M partidas (~480GB). Se guarda en cambio el snapshot compacto (FEN + columnas estructuradas) que reconstruye el tensor denso en O(1) sin re-parsear PGN ni revalidar legalidad -- ver tokenization_v1/scripts/position_state.py:board_to_tensor_v2. Se materializa el tensor denso completo SOLO sobre una muestra pequena (demo_sample_size) para validar shape/dtype/orientacion, siguiendo el mismo criterio de cautela que para Stockfish (no lanzar automaticamente computo masivo sin autorizacion explicita)."
+  },
+  "enable_stockfish": false,
+  "stockfish_path_env_var": "STOCKFISH_PATH",
+  "stockfish_depth": 10,
+  "stockfish_multipv": 3,
+  "stockfish_demo_sample_size": 60,
+  "stockfish_soft_policy_temperature_cp": 150.0,
+  "quality_thresholds_cp": {
+    "best": 5,
+    "excellent": 20,
+    "good": 60,
+    "inaccuracy": 120,
+    "mistake": 300
+  },
+  "criticality_thresholds": {
+    "forced_move_max_legal_moves": 1,
+    "low_branching_max_legal_moves": 3,
+    "big_eval_swing_cp": 150
+  },
+  "difficulty_weights": {
+    "w_inverse_legal_moves": 0.35,
+    "w_is_check": 0.15,
+    "w_forced_move": 0.30,
+    "w_phase_endgame_bonus": 0.20
+  },
+  "n_workers": 2,
+  "checkpoint_every_n_positions": 50000,
+  "log_every_n_games": 1000,
+  "log_every_n_seconds": 300,
+  "max_ram_gb_soft_limit": 6,
+  "max_ram_gb_hard_limit": 6,
+  "min_disk_free_gb": 20,
+  "action_vocab": {
+    "reused_from": "tokenization_v1/scripts/tokenizer.py (tokv1.0, sin cambios)",
+    "size": 20480,
+    "version": "tokv1.0"
+  },
+  "engine_schema_extension_version": "tokenization_schema_v2.1-engine",
+  "engine_criticality": {
+    "description": "Formula documentada en SCHEMA_V2.md seccion 'Extension v2.1'. Usa EXCLUSIVAMENTE senales de MultiPV (gap top1/top2, presencia de mate en cualquier candidato, concentracion de la soft policy en el candidato rank=1). Separado de criticality_score base -- nunca lo reemplaza.",
+    "gap_saturation_cp": 200,
+    "w_gap": 0.6,
+    "w_policy_concentration": 0.4,
+    "threshold": 0.5
+  },
+  "stockfish_validation": {
+    "description": "Prueba controlada de persistencia (correcciones 1/2/3 de la auditoria), NO enriquecimiento masivo. Reutiliza stockfish_depth/stockfish_multipv ya definidos arriba -- no se sube profundidad ni MultiPV respecto al demo de 60 posiciones.",
+    "sample_size": 1000,
+    "seed": 20260811,
+    "n_check_quota": 150,
+    "n_tactical_quota": 100,
+    "exclude_terminal_rows": true,
+    "output_subdir": "stockfish_validation_1000"
+  },
+  "stockfish_full": {
+    "description": "Enriquecimiento COMPLETO de las 808611 filas elegibles (human_move_id != -1) del piloto test_10000. Reutiliza EXACTAMENTE stockfish_depth=10/stockfish_multipv=3/soft policy temperature/quality thresholds/engine_criticality ya validados -- no se cambia ningun parametro respecto a la prueba de 1000. threads=1, hash_mb=16 (mismos defaults verificados en stockfish_validation_1000/run_manifest.json). Nunca escribe dentro de shards_v2/<test_name>/.",
+    "output_subdir": "stockfish_full",
+    "child_eval_multipv": 1,
+    "threads": 1,
+    "hash_mb": 16,
+    "batch_size": 2000,
+    "max_retries_per_position": 2,
+    "cache_db_filename": "engine_cache.sqlite",
+    "cache_enabled": false,
+    "cache_disabled_reason": "Fase 2 (17_cache_validation.py, reports/test_10000_cache_validation.json) encontro 2536 discrepancias en 400 posiciones: incluso DOS analisis SIN cache de la misma posicion (misma FEN+config), en puntos distintos de una sesion larga de Stockfish, dan scores/topk/best_move levemente distintos (variacion de unos pocos cp por posicion). Esto prueba que la causa es el estado interno del motor (hash table) acumulado entre llamadas dentro de una sesion persistente, no un bug de la clave de cache -- no hay clave posible que capture ese estado. Regla del encargo: 'si no podes demostrar equivalencia, desactiva cache'. El full run usa el MISMO camino sin-cache ya validado en stockfish_validation_1000 (1000/1000 OK, 15/15 checks PASS): una llamada fresca por posicion, sin reutilizacion.",
+    "n_workers": 1,
+    "n_workers_note": "Threads=1 por motor, 1 worker por defecto salvo que un benchmark controlado (Fase 3 del encargo) demuestre beneficio claro sin degradar RAM/CPU."
+  }
+}

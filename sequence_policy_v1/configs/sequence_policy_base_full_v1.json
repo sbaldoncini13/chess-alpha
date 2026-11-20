@@ -1,0 +1,55 @@
+{
+  "run_name": "sequence_policy_base_full_v1",
+  "classification": "WEIGHTS_WARM_START_FROM_PILOT_FULL_NEW_EPOCH",
+  "model_config_file": "model_base.yaml",
+  "pilot_checkpoint_local": "checkpoints/pilot_base/last.ckpt",
+  "pilot_checkpoint_drive": "sequence_policy_runs/sequence_policy_base_pilot_v1/last.ckpt",
+  "pilot_checkpoint_sha256_expected": "aa73cc5c79bf42d16414c638437a386a8bbc51d5fcdda146e353526e32ecc47c",
+  "pilot_global_step_reference": 7532,
+  "pilot_tokens_seen_reference": 5000327,
+  "seed": 20260806,
+  "epoch_targets": 73977508,
+  "epoch_input_tokens": 74877723,
+  "approx_cumulative_tokens_including_pilot": 78977835,
+  "note_repetition": "No hay sampler_state reanudable del piloto -- puede existir repeticion de partidas entre el piloto (5.000.327 tokens) y esta epoca nueva completa. No se resta ni se intenta evitar silenciosamente.",
+  "optimizer": {"family": "AdamW", "betas": [0.9, 0.95], "weight_decay": 0.1, "decoupled_weight_decay": true,
+                "base_lr": 1.0e-4, "note": "Mismos hiperparametros del piloto (sin incompatibilidad detectada); optimizer_state en si NO se reutiliza (Caso B)."},
+  "scheduler": {"type": "warmup_lineal + coseno", "warmup_pct": 0.03, "min_lr_ratio": 0.1,
+                "total_steps_formula": "ceil(epoch_input_tokens / effective_batch_tokens_target)",
+                "detalle": "reports/FULL_TRAINING_SCHEDULER_PLAN.md"},
+  "grad_clip_norm": 1.0,
+  "label_smoothing": 0.0,
+  "gpu_profiles": {
+    "T4": {"dtype": "fp16", "use_scaler": true, "gradient_checkpointing": true,
+           "effective_batch_tokens_target": 32768, "microbatch_base": 8, "vram_safety_margin_pct": 15},
+    "L4": {"dtype": "bf16", "use_scaler": false, "gradient_checkpointing": false,
+           "effective_batch_tokens_target": 49152, "microbatch_base": 16, "vram_safety_margin_pct": 15},
+    "A100": {"dtype": "bf16", "use_scaler": false, "gradient_checkpointing": false,
+             "effective_batch_tokens_target": 65536, "microbatch_base": 32, "vram_safety_margin_pct": 10}
+  },
+  "checkpointing": {
+    "checkpoint_every_tokens": 1500000,
+    "checkpoint_every_minutes_max": 12,
+    "checkpoint_names": ["last.ckpt", "best_mrr.ckpt", "best_top10.ckpt", "periodic_tokens_<N>.ckpt"],
+    "atomic_write": "tmp -> validar carga -> os.replace"
+  },
+  "evaluation": {
+    "dev_fast_every_tokens": 2000000,
+    "dev_fast_max_windows": 2000,
+    "dev_full_every_tokens": 5000000,
+    "never_use_test": true
+  },
+  "checkpoint_selection": {
+    "primary_metric": "mrr_dev_global",
+    "guardrails": ["top10_dev_global", "top1_mrr_ply_31_150", "loss_dev_global",
+                   "0_errores_numericos", "legalidad_post_mascara_100pct"],
+    "tie_break_order": ["mejor_mrr_global", "mejor_top10", "mejor_agregado_ply_31_150",
+                         "menor_loss", "checkpoint_anterior_si_equivalente"]
+  },
+  "sampler": {"class": "DeterministicWindowSampler", "bucket_mult": 50},
+  "drive_run_path": "/content/drive/MyDrive/chess-alpha/sequence_policy_runs/sequence_policy_base_full_v1/",
+  "isolation": "No reutiliza ni sobrescribe sequence_policy_base_pilot_v1. Run completamente separado.",
+  "not_authorized_without_confirm_full_training_flag": true,
+  "never_use_test": true,
+  "never_modify": ["checkpoints/pilot_base/last.ckpt", "Epoch4", "search_tree_v1", "tokenization_v1", "data/splits/*"]
+}

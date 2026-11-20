@@ -1,0 +1,25 @@
+# Piloto BASE -- PREPARADO, no ejecutado localmente (requiere GPU/Colab).
+# Compara context_length 128 vs 256 y label_smoothing 0.0 vs 0.02 con el
+# MISMO presupuesto de tokens (seccion 18/19). Seleccion solo con dev.
+model_config: model_base.yaml
+seed: 20260810
+max_tokens_pilot: 5000000
+max_tokens_pilot_extended: 10000000
+effective_batch_tokens_target: 49152  # dentro de 32000-65000 pedido
+learning_rate_candidates: [1.0e-4, 2.0e-4, 3.0e-4]
+weight_decay: 0.1
+betas: [0.9, 0.95]
+grad_clip_norm: 1.0
+warmup_pct: 0.03
+min_lr_ratio: 0.1
+checkpoint_every_minutes: 12
+checkpoint_every_updates: 300
+eval_every_updates: 300
+ablations:
+  context_length: [128, 256]
+  label_smoothing: [0.0, 0.02]
+  # Diseño pequeño (no grid completo 2x2x3 lr): primero elegir contexto con
+  # lr=2e-4 y smoothing=0 fijos, DESPUES smoothing con el contexto ganador,
+  # DESPUES barrer lr solo sobre la combinacion ganadora.
+not_authorized_to_run_locally: true
+requires: "GPU (Colab) -- ver colab_bundle/"

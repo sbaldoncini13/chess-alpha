@@ -1,0 +1,99 @@
+{
+  "enrichment_schema_version": "tokenization_enrichment_v3.0",
+  "source_golden": {
+    "golden_dataset_id": "chess_alpha_tokenization_golden_test10000_v1",
+    "golden_dataset_version": "1.0.0",
+    "golden_manifest_path": "../../tokenization_v1/golden/test_10000_v1/golden_manifest.json",
+    "golden_lock_path": "../../tokenization_v1/golden/test_10000_v1/GOLDEN_DATASET.lock",
+    "golden_shards_dir": "../../tokenization_v1/shards_v2/test_10000",
+    "golden_engine_dir": "../../tokenization_v1/outputs_v2/test_10000/stockfish_full",
+    "note": "SOLO LECTURA. V3 nunca escribe dentro de estas rutas."
+  },
+  "output_dir": "../outputs",
+  "checkpoint_dir": "../checkpoints",
+  "reports_dir": "../reports",
+  "manifests_dir": "../manifests",
+  "logs_dir": "../logs",
+  "action_vocab": {
+    "reused_from": "tokenization_v1/scripts/tokenizer.py (tokv1.0, solo lectura, sin cambios)",
+    "size": 20480,
+    "version": "tokv1.0"
+  },
+  "families_enabled": {
+    "attack_maps": true,
+    "hanging_pieces": true,
+    "mobility": true,
+    "king_safety": true,
+    "pawn_structure": true,
+    "passed_pawns": true,
+    "pawn_majorities": true,
+    "outposts": true,
+    "pins_skewers": true,
+    "overloaded_pieces": true,
+    "see": true,
+    "threats": true,
+    "tactical_motifs": true,
+    "space": true,
+    "piece_activity": true,
+    "center_structure": true,
+    "eval_trajectory": true,
+    "policy_entropy_margins": true,
+    "wdl": true,
+    "terminal_distance": true,
+    "mate_labels": true,
+    "tablebase": true,
+    "human_consensus": true,
+    "sequences": true
+  },
+  "priority_families": ["sequences", "attack_maps", "pawn_structure", "king_safety", "piece_activity"],
+  "sequence_lengths": [4, 8, 16, 32],
+  "king_safety": {
+    "king_ring_radius": 1,
+    "near_attacker_radius": 2,
+    "queen_proximity_max_distance": 3,
+    "rook_proximity_max_distance": 3,
+    "exposure_score_weights": {
+      "w_king_ring_attacked": 0.30,
+      "w_pawn_shield_missing": 0.20,
+      "w_open_files": 0.15,
+      "w_semi_open_files": 0.10,
+      "w_enemy_attackers_near": 0.15,
+      "w_queen_near": 0.05,
+      "w_rook_near": 0.05
+    }
+  },
+  "outpost": {
+    "min_rank_from_own_side": 4,
+    "description": "Casilla protegida por un peon propio, no atacable por peon rival, en territorio rival relativo (fila >=4 para blancas / <=5 para negras en notacion 1-8)."
+  },
+  "overloaded_piece": {
+    "min_critical_defenses": 2,
+    "description": "Pieza que es la UNICA defensora de 2+ piezas/casillas criticas simultaneamente (definicion conservadora, ver docs/FEATURE_DEFINITIONS.md)."
+  },
+  "tactical_thresholds": {
+    "immediate_material_threat_min_value": 3,
+    "forcing_capture_min_value": 3
+  },
+  "quality_thresholds_cp_reused_note": "best/excellent/good/inaccuracy/mistake/blunder ya existen en engine_eval del Golden -- V3 no las recalcula.",
+  "decision_margin_thresholds_cp": {
+    "description": "gap = top1_top2_gap (unidades cp unificadas, ver docs/FEATURE_DEFINITIONS.md #21). gap<=competitive_max_gap -> 'competitive' (varias jugadas casi igual de buenas); gap>=forced_min_gap, mate en juego, o unica jugada legal -> 'forced' (la decision es esencialmente obligada); resto -> 'clear'.",
+    "competitive_max_gap": 20,
+    "forced_min_gap": 150
+  },
+  "consensus": {
+    "min_occurrence_for_consensus": 2,
+    "description": "canonical_position_consensus_key = FEN completo (incluye side-to-move, castling, en-passant) -- ver docs/FEATURE_DEFINITIONS.md seccion 26."
+  },
+  "wdl": {
+    "method": "logistic_win_probability_only",
+    "reused_from": "src/19_analyze_elo_games_errors.py:cp_to_winprob (solo lectura) -- win_probability = 1/(1+10^(-cp/400))",
+    "note": "Solo win_probability tiene una formula ya validada y reutilizable en el repo. draw/loss 3-way WDL NO tiene una transformacion reproducible existente (el WDL nativo de Stockfish requeriria una nueva consulta UCI, prohibida en esta tarea) -- se marca NOT_IMPLEMENTED_REQUIRES_DEFINITION para el split completo."
+  },
+  "tablebase": {
+    "syzygy_path_env_var": "SYZYGY_PATH",
+    "note": "Opcional. No se descarga nada. Si SYZYGY_PATH no esta configurado, tablebase_available=false para todas las filas."
+  },
+  "score_fidelity_distance_metric": "jensen_shannon",
+  "batch_size": 2000,
+  "n_workers": 1
+}

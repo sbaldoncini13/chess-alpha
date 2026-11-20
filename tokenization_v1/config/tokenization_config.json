@@ -1,0 +1,29 @@
+{
+  "tokenizer_version": "tokv1.0",
+  "seed": 20260803,
+  "n_workers": 2,
+  "source_pgn": "../../data/raw/AJ-OTB-PGN-000.pgn",
+  "checkpoint_every_n_games": 1000,
+  "log_every_n_games": 1000,
+  "log_every_n_seconds": 600,
+  "max_ram_gb_soft_limit": 6,
+  "max_ram_gb_hard_limit": 6,
+  "min_disk_free_gb": 20,
+  "candidate_window_size": 8,
+  "tests": {
+    "test_10000": {
+      "target_valid_games": 10000
+    },
+    "smoke_20": {
+      "target_valid_games": 20
+    },
+    "preflight_1m": {
+      "target_valid_games": 30,
+      "checkpoint_every_n_games": 1000
+    },
+    "full_1000000": {
+      "target_valid_games": 1000000,
+      "checkpoint_every_n_games": 10000
+    }
+  }
+}

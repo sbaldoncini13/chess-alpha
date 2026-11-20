@@ -1,0 +1,11 @@
+# Perfil GPU A100 (35GB+ VRAM) -- NO ejecutar localmente.
+gpu_profile: A100
+model_config: model_base.yaml
+precision: bf16
+gradient_checkpointing: false
+microbatch_autotune: true
+vram_safety_margin_pct: 10
+effective_batch_tokens_target: 65536
+max_tokens_full_pass: 240000000  # continuacion hasta 160-240M si dev sigue mejorando
+allow_large_pilot: true
+selection_criterion: "metricas de dev, no tamano del modelo"

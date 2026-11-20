@@ -1,0 +1,10 @@
+# Perfil GPU L4 (20-24GB VRAM) -- NO ejecutar localmente.
+gpu_profile: L4
+model_config: model_base.yaml
+precision: bf16
+gradient_checkpointing: false
+microbatch_autotune: true
+vram_safety_margin_pct: 15
+effective_batch_tokens_target: 49152
+max_tokens_full_pass: 81244568
+allow_large_pilot: true  # se puede correr un piloto comparativo de LARGE, no seleccionar solo por tamano

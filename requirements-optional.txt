@@ -1,0 +1,14 @@
+# Optional: neural components (Epoch4 policy/value CNN+Transformer in
+# src/chess_alpha, Sequence Policy transformer in sequence_policy_v1).
+# CPU wheel used for validation; on Windows, a plain `pip install torch` of
+# some versions failed to load c10.dll (WinError 1114), so the CPU wheel is pinned:
+#   pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cpu
+torch==2.4.1
+
+# Sequence Policy statistical baselines / dataset tooling
+duckdb>=1.0
+tqdm>=4.66
+
+# Stockfish is NOT included and NOT required for the tests or examples.
+# Some data-generation scripts (tokenization_v1/scripts/*stockfish*) call a
+# locally installed Stockfish binary through python-chess's UCI interface.

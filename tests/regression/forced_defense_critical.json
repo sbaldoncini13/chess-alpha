@@ -1,0 +1,33 @@
+{
+  "description": "Suite de regresion critica: los 2 fallos de defensa obligatoria encontrados en la Fase 7 del experimento policy_prior (candidato con prior lambda=0.15 ignoro la defensa correcta). NO forman parte del nucleo humano de 40.000 posiciones de SEARCH TREE DATASET V1.1 (no cumplen Elo 2200-2300 verificado ni el criterio de partida nueva - son posiciones de auditoria historica). No se usan para ajustar hiperparametros ni seleccionar configuraciones. Se mantienen aparte para impedir que estos errores reaparezcan en futuras versiones del buscador. Marcadas con prioridad 1 para Nivel C (analisis exhaustivo).",
+  "source": "reports/policy_prior_real/tactical_benchmark_fase7/tactical_regressions.md",
+  "origin": "policy_prior_fase7_regression",
+  "level_c_priority": 1,
+  "reason_for_level_c": "fase7_regression_historica_defensa_ignorada",
+  "cases": [
+    {
+      "position_id": "82130fe8354c78fc",
+      "fen": "1kr5/1p3p1p/8/4Q3/1P1RPP2/8/PKP1q3/8 b - - 8 35",
+      "theme": "defensa_obligatoria_ante_mate",
+      "solution": "b8a7",
+      "baseline_move": "b8a7",
+      "baseline_correct": true,
+      "policy_prior_candidate_move": "b8a8",
+      "policy_prior_candidate_correct": false,
+      "gate_ignores_defense": true,
+      "gate_loses_mate": false
+    },
+    {
+      "position_id": "6992422dd457e9a8",
+      "fen": "5R2/4N1pk/1p3n1p/1P5P/8/r6K/5PP1/8 w - - 13 44",
+      "theme": "defensa_obligatoria_ante_mate",
+      "solution": "f2f3",
+      "baseline_move": "f2f3",
+      "baseline_correct": true,
+      "policy_prior_candidate_move": "h3h4",
+      "policy_prior_candidate_correct": false,
+      "gate_ignores_defense": true,
+      "gate_loses_mate": false
+    }
+  ]
+}
