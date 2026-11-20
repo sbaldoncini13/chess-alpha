@@ -1,0 +1,11 @@
+# Core: search engine (src/search_v1), tokenization and V3 position features.
+# Versions below are the ones used to validate this export (Python 3.12, Windows).
+chess>=1.11          # python-chess (GPL-3.0-or-later)
+numpy>=2.0
+pandas>=2.2
+pyarrow>=17.0
+pyyaml>=6.0
+psutil>=5.9
+
+# Tests
+pytest>=8.0

@@ -1,47 +1,34 @@
 # GitHub publication checklist — Chess Alpha
 
-This checklist helps transform a historical technical summary into a trustworthy public software repository.
+Status of the publication checklist after the source-code audit and final pre-publication review of 2026-11-20.
 
 ## Evidence and accuracy
 
-- [ ] Compare this README with the *current* Git working tree, branches and module names.
-- [ ] Confirm the 1,000,000-game / ~81.2M-ply count from the final run's manifest.
-- [ ] Confirm Golden 10k / 808,611 plies / 818,611 position rows / nine shards, plus SHA-256 manifests.
-- [ ] Verify all 28 V3 feature-family names from actual schemas or data dictionaries; do not infer names.
-- [ ] Confirm the Search Tree v1.1 test suite output and observability benchmark report.
-- [ ] Inspect exact Sequence Policy FULL checkpoint config and training logs.
-- [ ] Locate `sequence_policy_full_test_2286.json` before claiming definitive frozen-test metrics.
-- [ ] Verify search-aware 40–60 feature generation status and any trained downstream decision-tree model before marking them complete.
-- [ ] Preserve the negative tactical decision for λ=0.15 and the gate that rejected promotion.
-- [ ] Verify which branches were merged, archived, or remain experimental.
+- [x] README compared with the actual source tree and module names. It now describes only published code, and lists unpublished components explicitly.
+- [x] 1,000,000 games / 81,244,568 move tokens confirmed from `tokenization_v1/outputs/full_1000000/manifest.json` (seed 20260803, SHA-256 per file).
+- [x] Golden 10k / 808,611 plies / 818,611 position rows confirmed from manifests.
+- [x] Sequence Policy FULL architecture confirmed from `configs/model_base.yaml` (8 layers, d=384, 6 heads, FFN 1536, ctx 256, vocab 20,483).
+- [x] `sequence_policy_full_test_2286.json` located (`FROZEN_TEST_FINAL`). Final test metrics are now reported.
+- [x] Search Tree V1 test suite re-run on the exported tree (see README → Tests).
+- [x] Search-aware 60-family status verified: implemented and piloted, full production **not** completed. Reported as experimental.
+- [x] Negative λ=0.15 result preserved, with figures checked against the phase-6/phase-7 summaries (703 positions; 568-position tactical gate).
+- [x] Experimental and unpublished branches listed (Relative2D, separate towers, search_enrichment_v1, tree_optimization_v1, arena pilot).
+- [x] The 28 V3 feature-family names in `docs/ARCHITECTURE.md` checked against `tokenization_enrichment_v3/scripts/feature_registry.py`.
 
 ## Public safety and repository hygiene
 
-- [ ] Exclude API keys, tokens, SSH keys, credentials, `.env` files and machine-specific secrets.
-- [ ] Remove personal filesystem paths from code examples and configuration defaults.
-- [ ] Check all PGN source and derived-data redistribution rights.
-- [ ] Check licensing/redistribution for Stockfish and other third-party binaries; include required notices where applicable.
-- [ ] Do not push massive corpora, backups, checkpoints or archives inadvertently; consider Git LFS or independent artifact hosting for permitted large files.
-- [ ] Exclude `.venv/`, cache directories, local logs, temporary shards and machine-generated intermediates from normal commits unless needed for a reproducible small example.
-- [ ] Add a clear open-source license **only after explicitly choosing one**.
-- [ ] Record Python/dependency versions, installation instructions and test commands from the actual project.
-- [ ] Provide at least one small publicly redistributable example demonstrating tokenization and legality.
-- [ ] Where possible, add CI for tokenizer, FEN, move legality, feature joins and search regression tests.
+- [x] No API keys, tokens, credentials or `.env` files in the exported tree (scanned).
+- [x] No personal filesystem paths in exported files (scanned).
+- [x] No datasets, PGN files, checkpoints, archives, binaries, logs or notebooks in the export. `.gitignore` blocks them.
+- [x] No Stockfish code or binary included. Stockfish is only called as an external UCI process, through python-chess, by optional scripts.
+- [x] Every exported source file is byte-identical to the research tree (`EXPORT_MANIFEST.sha256`).
+- [x] License: GPL-3.0-or-later for the project's own code (`LICENSE`, the canonical FSF text). Third-party terms are listed in `THIRD_PARTY_NOTICES.md`. No third-party code is bundled.
+- [x] Datasets and model checkpoints are excluded from this release. Publishing any of them later requires confirming the redistribution rights of every PGN source first.
+- [ ] Optional: add CI (GitHub Actions) running `pytest` with `requirements.txt` on Linux.
 
-## Suggested repository layout (adapt to what exists)
+## Reproducibility
 
-```text
-chess-alpha/
-├── README.md
-├── PUBLICATION_CHECKLIST.md
-├── docs/
-│   ├── TECHNICAL_OVERVIEW_ES.md
-│   └── PROJECT_MILESTONES.md
-├── tokenization_v1/               # Only if this directory exists
-├── sequence_policy_v1/             # Only if this directory exists
-├── search_tree_v1/                 # Use actual names from repo
-├── [other existing source modules]
-└── [tests and reproducible examples]
-```
-
-The documentation files in this package are intended to sit at the repository root (and under `docs/`). **Do not create empty implementation folders just to match the illustration.**
+- [x] `requirements.txt` (core) and `requirements-optional.txt` (torch CPU, duckdb) with validated versions.
+- [x] Two runnable examples on synthetic positions (`examples/`).
+- [x] Tests that need private data or checkpoints skip cleanly or are left out of collection (`conftest.py`).
+- [ ] Tests were validated on Windows / Python 3.12 only. They have not been run on Linux or macOS.

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+_venv/
+
+# Data, models and run artifacts are never committed
+data/
+models/
+checkpoints/
+logs/
+/reports/
+outputs/
+outputs_v2/
+shards/
+shards_v2/
+golden/
+sequence_policy_runs/
+*.pt
+*.ckpt
+*.bin
+*.npy
+*.parquet
+*.pgn
+*.zip
+*.db
+*.sqlite
+*.pkl
+*.log
+
+# Local environment
+.env
+.env.*
+.claude/
+.obsidian/
+.vscode/

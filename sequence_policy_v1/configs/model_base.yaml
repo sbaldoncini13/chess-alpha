@@ -1,0 +1,12 @@
+name: BASE
+num_layers: 8
+d_model: 384
+num_heads: 6
+head_dim: 64
+ffn_hidden: 1536
+context_length: 256
+dropout: 0.10
+attention_dropout: 0.05
+vocab_size: 20483
+tied_embeddings: true
+rope_base: 10000.0

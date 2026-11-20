@@ -1,0 +1,12 @@
+name: TINY
+num_layers: 4
+d_model: 256
+num_heads: 4
+head_dim: 64
+ffn_hidden: 1024
+context_length: 128
+dropout: 0.10
+attention_dropout: 0.05
+vocab_size: 20483
+tied_embeddings: true
+rope_base: 10000.0

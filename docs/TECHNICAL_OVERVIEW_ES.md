@@ -129,7 +129,7 @@ Se verificó un checkpoint denominado `last.ckpt` con SHA-256:
 
 Durante una etapa intermedia, una ejecución alcanzó el step 1600 y se observaron métricas de DEV `top1=0,29794`, `top10=0,69095` y `MRR=0,42985`; **ese checkpoint step 1600 no estaba inicialmente recuperable en Drive**. La recuperación posterior del checkpoint FULL step 2286 no debe confundirse con esos resultados intermedios.
 
-La evaluación de TEST congelado se configuró para **50.016 ventanas** y **4.118.551 targets** y validó los hashes al comenzar. El fragmento de salida recuperado contiene progreso parcial, no el JSON final de métricas. Por ello, las cifras definitivas del TEST **no se afirman aquí** hasta cotejar el archivo `sequence_policy_full_test_2286.json`.
+La evaluación de TEST congelado usó **50.016 ventanas** y **4.118.551 targets** y verificó los hashes del checkpoint y del test al comenzar. El reporte final `sequence_policy_full_test_2286.json` (`evaluation_type = FROZEN_TEST_FINAL`, lectura única, checkpoint fijo y sin tuning iterativo) se localizó y se revisó en la auditoría de publicación (2026-11-20). Sus valores: **top-1 0,30098**, top-3 0,49442, top-5 0,58261, **top-10 0,70065**, top-20 0,81434, **MRR 0,43436**, perplejidad 19,65, ECE 0,0139 y rango mediano 4. En DEV (50.444 ventanas) se obtuvo top-1 0,3007, top-10 0,69986 y MRR 0,43383. Que ambos resultados sean prácticamente idénticos no sugiere sobreajuste. Por tramo de partida, el modelo es mucho más preciso en la apertura (plies 1–10: top-1 0,623) que en el medio juego y el final (plies 31–80: 0,191; 81–150: 0,140).
 
 ## 7. Línea policy/value basada en tablero y Chess Alpha v1.1
 
@@ -140,6 +140,10 @@ Otra rama investigó representación explícita del tablero y salida de policy/v
 En julio de 2026 se compararon `control_epoch02`, `balanced_epoch02` y `epoch5`. El enfrentamiento directo entre `control_epoch02` y `balanced_epoch02` se consideró prácticamente empatado (una referencia contempla 500 partidas), pero se escogió **`control_epoch02`** por indicadores de calidad de jugada y correlación de valor; se conservó `balanced_epoch02` sin promocionarlo como ganador.
 
 En un benchmark de 100 partidas frente a `epoch5` bajo configuración controlada, `control_epoch02` obtuvo **44 victorias, 39 tablas y 17 derrotas**, score **63,5 %**, estimación relativa **+96,2 Elo** con intervalo aproximado **[+44, +153]** y **cero jugadas ilegales**. Se usó una evaluación híbrida de material 0,25 + value 0,75, profundidad 2 y top-k 16. La estimación **no mide Elo absoluto ni implica superioridad frente a motores externos**.
+
+### Epoch4: modelo operativo seleccionado
+
+Después de v1.1 se construyó y congeló un dataset nuevo (Dataset Epoch 4), con auditorías de leakage, de fases y de control de tiempo, y se entrenó **Epoch4** con la arquitectura `PolicyValueNetHybrid`: 23 planos de entrada, 6 bloques residuales convolucionales de 256 canales y 4 bloques Transformer de 8 cabezas (`src/chess_alpha/model_hybrid.py`). En una Arena confirmatoria de **500 partidas** (250 pares con colores invertidos, aperturas nuevas generadas con semilla fija) contra `control_epoch02`, Epoch4 obtuvo un **score de 60,8 %**, con intervalo de Elo íntegramente por encima de 0, 0 errores y 0 jugadas ilegales. Por eso fue promovido a modelo operativo. Su checkpoint no se publica.
 
 También se revisaron propuestas de positional encoding **Relative2D** A/B sobre una base común de checkpoint, datos y semilla; quedaron por comprobar métricas comparables de coverage, Spearman, centipawn loss y latencia. Para selección de partidas de una fase posterior se examinó un pool de **81.592 partidas** y se corrigió la regla de diversificación de aperturas para limitar **códigos ECO completos** (5% por código), no letras agregadas A–E.
 
@@ -159,7 +163,9 @@ El motor fue desarrollado como sistema de búsqueda legal, no como un árbol de 
 8. **DFPN/PNS** para exploración de prueba de mate o problemas tácticos especializados.
 9. **Legalidad/terminalidad**: jaques, mates, ahogados, repeticiones/ciclos y consistencia de la variación principal.
 
-Hubo trabajo específico de corrección de bugs, benchmarks y cobertura de regresiones. Se registró un cierre parcial de fases I–VI con **387 tests PASS, 1 skipped** y una validación posterior de Search Tree v1.1 con **458 PASS, 1 skipped, 0 failed**. Son snapshots de suites diferentes: no deben sumarse los recuentos como si fueran tests independientes.
+Hubo trabajo específico de corrección de bugs, benchmarks y cobertura de regresiones. El cierre de las fases I–VI registró **387 tests PASS y 1 skipped**. El cierre de la Fase VIII (integración de Epoch4, Sequence Policy y Fusion) registró **458 PASS, 1 skipped y 0 failed**. Son snapshots sucesivos de la misma suite y no deben sumarse. Nota de nombres: «V1.1» corresponde al *dataset* (`SEARCH TREE DATASET V1.1`); el buscador es **Search Tree V1**, construido en fases I–VIII. En la auditoría de publicación (2026-11-20) se volvió a ejecutar la suite exportada sin datasets ni checkpoints. Los números de esa corrida figuran en el README, e incluyen los tests del Observatory agregados después del cierre de la Fase VIII.
+
+**Integración neuronal (Fases VII y VIII).** Epoch4 y Sequence Policy actúan como proveedores de ordenamiento que solo pueden **reordenar**: devuelven siempre una permutación exacta de las jugadas que PVS ya generó. La autoridad táctica sigue siendo de la búsqueda de ancho completo y de DFPN. En el benchmark A/B/C/D de N=2000 posiciones con historial real (profundidad 2) se registraron 0 jugadas ilegales y 0 errores en 11.988 búsquedas. Epoch4 en `root_only` resolvió el 48,0 % de los casos tácticos y la fusión RRF con Sequence Policy, el 46,0 %. En defensa única, los valores fueron 75,1 % y 73,5 %. Por eso Sequence Policy y Fusion quedan integrados pero desactivados por defecto.
 
 Se incorporó observabilidad opcional: inspección de nodos, eventos y estadísticas de búsqueda sin alterar decisiones. En un benchmark posterior **90 posiciones × 5 configuraciones = 450 ejecuciones** produjeron 450 registros, con **cero mutaciones de estado, cero movimientos ilegales y cero errores de ejecución observados**. La existencia de esta instrumentación sirve para estudiar costo y comportamiento; no demuestra por sí sola superioridad competitiva.
 
@@ -185,11 +191,11 @@ Después de completar V3 se propuso un enriquecimiento adicional ligado al compo
 
 Categorías estudiadas: ranking de orden de movimientos, pertenencia a la principal variation, cutoffs, nodos por rama, `qnodes`, estabilidad del mejor movimiento o de la evaluación entre profundidades, profundidad necesaria para decidir, criterios de seguridad de LMR y discordancias entre policy y search. Las tablas de candidatos se pensaron como outputs separados, unidos mediante claves `row_id + move_id`, sin modificar Golden ni V3.
 
-**No se debe declarar que las 60 variables fueron generadas y validadas completamente** sin encontrar logs y manifests de su corrida final. Tampoco debe afirmarse que ya existe un árbol de decisión entrenado que consuma ese bloque: el objetivo era reunir información y después comparar la aportación predictiva de cada grupo mediante experimentos o ablaciones.
+**Estado verificado en la auditoría de publicación:** la implementación existe (`search_enrichment_v1`, no publicada en esta versión) y define una matriz de 60 familias. Se completaron pilotos de 1.000 y 10.000 posiciones y un gate de 100.000 posiciones (2.000/2.000 chunks), pero ese gate cerró con **PASS operacional = FALSE** por throughput y episodios de suspensión de Windows. La producción completa sobre las 818.611 filas **no se completó**. **No se debe declarar que las 60 variables fueron generadas y validadas completamente.** Tampoco debe afirmarse que ya existe un árbol de decisión entrenado que consuma ese bloque: el objetivo era reunir información y después comparar la aportación predictiva de cada grupo mediante experimentos o ablaciones.
 
 ## 11. Dataset de Search Tree, Stockfish y evaluaciones auxiliares
 
-La línea `search_tree_v1` incluía trabajo de construcción de datasets usando posiciones y, en momentos específicos, procesos de Stockfish. También se trató un dataset `SEARCH TREE DATASET V1.1` de alrededor de **40.000 posiciones** de partidas humanas de Elo aproximadamente **2200–2300**, además de calibraciones de búsqueda a profundidad 17 y divisiones por shards. Estas cifras aparecen como contexto de ejecución/proyecto y **no quedan certificadas aquí como tamaño final publicado**.
+La línea `search_tree_v1` incluía trabajo de construcción de datasets usando posiciones y, en momentos específicos, procesos de Stockfish. También se construyó `SEARCH TREE DATASET V1.1`, con **39.961 posiciones** de partidas humanas de Elo verificado en el rango 2200–2300. Su auditoría final (Fase 19) cerró como PASS_WITH_WARNINGS, con 7 advertencias no bloqueantes. De ese dataset se derivó **Nivel C**: **12.963 posiciones** analizadas exhaustivamente con Stockfish (profundidad 17, MultiPV sobre todas las jugadas legales) en 4 shards consolidados y congelados con SHA-256. Nivel C es terreno de validación posición por posición del buscador, no un dataset de entrenamiento. Ninguno de los dos se publica.
 
 En una fase de validación basada en Python y `python-chess` se ejecutaba CPU-only la cadena de legalidad → Alpha–Beta → TT → quiescence → validación. No es correcto afirmar que esa fase usaba GPU, Stockfish en cada posición o el checkpoint de Sequence Policy.
 
@@ -209,16 +215,19 @@ En una fase de validación basada en Python y `python-chess` se ejecutaba CPU-on
 |---|---|
 | Muestreo PGN y piloto 10k | Implementado y probado |
 | Esquema de action ID uint16 | Implementado y probado |
-| Dataset principal de 1M | Reportado como completo; requiere manifest adjunto para prueba pública |
+| Dataset principal de 1M | Completo: manifest con 1.000.000 partidas, 81.244.568 tokens, semilla 20260803 y hashes SHA-256 |
 | Golden Dataset | Construido, congelado y comprobado |
-| V3 de 28 familias | Full-run y validaciones completadas |
-| Sequence Policy FULL step 2286 | Entrenamiento final registrado y checkpoint recuperado |
-| Sequence Policy TEST definitivo | Se conocen diseño y arranque; falta cotejar reporte final |
+| V3 de 28 familias | Full-run y validaciones completadas; código publicado |
+| Sequence Policy FULL step 2286 | Entrenamiento final registrado y checkpoint recuperado; código publicado, checkpoint no |
+| Sequence Policy TEST definitivo | Completado: `FROZEN_TEST_FINAL`, top-1 0,301 y MRR 0,434 |
 | v1.1 control vs epoch5 | Evaluación arena contextualizada y documentada |
-| Search Tree v1.1 | Suite consolidada validada |
+| Epoch4 vs control_epoch02 | Arena confirmatoria de 500 partidas con score de 60,8 %; Epoch4 seleccionado |
+| Search Tree V1 (fases I–VIII) | Implementado, testeado y congelado; código publicado |
 | Observabilidad de búsqueda | Benchmark de 450 ejecuciones validado |
 | Priors `λ=0,15` | Fase 6 favorable, Fase 7 rechazada |
-| 40–60 señales search-aware | Diseño; estado del full-run por verificar |
+| 40–60 señales search-aware | Implementado y en piloto; gate de 100k con PASS operacional = FALSE; producción completa no realizada |
+| Tuning de parámetros de búsqueda (Optuna) | Experimental, no publicado |
+| Arena de `search_v1` | Piloto de 40 partidas (score 50 %), no concluyente, no publicado |
 | Self-play con RL + MCTS | Investigación/propuesta, no confirmado como implementado |
 | Modelo final integrado / motor de torneo | No certificado por esta evidencia |
 

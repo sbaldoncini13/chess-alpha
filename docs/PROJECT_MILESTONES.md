@@ -12,13 +12,17 @@ This is a **historical milestone summary**, not a literal chronological Git log.
 | August 2026 | Main million-game corpus | Project records report 1M selected games and ~81.2M plies; preserve original manifest for artifact-level verification |
 | August 2026 | Golden Dataset | 10,000-game immutable subset, 818,611 position-level rows, nine shards, SHA-256 and structural checks |
 | August 2026 | Sequence Policy FULL | Causal transformer checkpoint recovered at step 2286 / 74,536,785 tokens seen; earlier gradient accumulation issue corrected |
-| August 2026 | Frozen Sequence Policy test | Test design and integrity checks prepared for 50,016 windows / 4,118,551 targets; captured log alone does not establish final results |
+| August 2026 | Frozen Sequence Policy test | Read once (`FROZEN_TEST_FINAL`) on 50,016 windows / 4,118,551 targets: top-1 0.301, top-10 0.701, MRR 0.434, which matches dev (top-1 0.301, MRR 0.434) |
 | August 2026 | Search engine phases | Alpha–Beta/PVS/TT/quiescence/LMR/null move/DFPN-PNS plus correctness and tactical test cases |
 | August 2026 | Enrichment V3 | 28 feature families completed over 818,611 rows, 9/9 shards, 100% join, 30/30 tests; bitboard dtype issue corrected |
-| August–September 2026 | Search observability / Search Tree v1.1 | 458 passed + 1 skipped; 450 benchmark runs and no observed illegal moves/state mutation |
-| August–September 2026 | Search-aware feature design | Proposal developed from 10 → 40 → ~60 candidate signals; final full-run and impact selection not established |
+| August 2026 | Epoch4 selection | 500-game confirmatory arena vs `control_epoch02`: Epoch4 scored 60.8 %, with an Elo CI above 0 and 0 errors/illegal moves. Promoted to the operational model |
+| August 2026 | Search Tree V1 phases VII–VIII | Epoch4 (reorder-only, `root_only`) and Sequence Policy + RRF fusion (opt-in) integrated. Closure suite: 458 passed + 1 skipped. N=2000 benchmark: 0 illegal moves in 11,988 searches. Fusion did not beat Epoch4 alone, so it stays off by default |
+| August 2026 | Search observability (Search Tree Observatory) | Opt-in per-node tracing. 90 positions × 5 configurations = 450 runs with no observed illegal moves or state mutation |
+| August 2026 | Search-aware feature enrichment | 60-family implementation. 1k and 10k pilots completed. The 100k gate ran 2,000/2,000 chunks but closed with operational PASS = FALSE (throughput, Windows standby). The full production run was not completed |
+| August 2026 | Search-parameter tuning and arena pilot | Random Search / Optuna tuning with safety gates and a 40-game `search_v1` arena pilot (50 % score, inconclusive). Both experimental and unpublished |
 | 2026 experimental calibration | Policy-prior λ=0.15 | Fase 6 improved ranking metrics on 703 positions; Fase 7 rejected after critical mate-defense and discovered-attack regressions |
 | Future research | Self-play / MCTS and additional neural architectures | Discussed as prospective direction, not represented as completed implementation |
+| November 2026 | Source-code publication audit | Code inventoried and audited for secrets and provenance. Core packages exported byte-identically, with test suites re-run on the export (see README) |
 
 ## Interpretation rules
 

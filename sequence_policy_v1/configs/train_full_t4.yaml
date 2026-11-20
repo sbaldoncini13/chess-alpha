@@ -1,0 +1,10 @@
+# Perfil GPU T4 (15-16GB VRAM) -- NO ejecutar localmente.
+gpu_profile: T4
+model_config: model_base.yaml
+precision: fp16  # T4 no soporta BF16 nativo con buen rendimiento
+gradient_checkpointing: true
+microbatch_autotune: true
+vram_safety_margin_pct: 15
+effective_batch_tokens_target: 32768
+max_tokens_full_pass: 81244568  # ~ una pasada sobre train (73M) + margen
+allow_large_pilot: false  # con T4 no se corre piloto comparativo de LARGE
